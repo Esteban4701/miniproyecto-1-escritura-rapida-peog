@@ -1,0 +1,46 @@
+
+.root {
+    -fx-font-family: "Rajdhani";
+    -fx-font-size: 15px;
+}
+
+.title {
+    -fx-font-family: "Orbitron";
+    -fx-font-size: 40px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, #B427CF, 20, 0.8, 0, 0)
+    dropshadow(gaussian, #B427CF, 40, 0.4, 0, 0);
+}
+
+.game-bg {
+    -fx-background-image: url("../images/game-bg2.jpg");
+    -fx-background-size: stretch;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+}
+
+.timer {
+    -fx-font-family: "Share Tech Mono";
+    -fx-font-size: 15px;
+}
+.start-bg {
+    -fx-background-image: url("../images/menu-bg.png");
+    -fx-background-size: stretch;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+}
+
+.main-title {
+    -fx-font-family: "Orbitron";
+    -fx-font-size: 72px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-effect: dropshadow(gaussian, #ffffff, 8, 0.3, 0, 0);
+}
+
+.sub-title {
+    -fx-font-family: "Rajdhani";
+    -fx-font-size: 18px;
+    -fx-text-fill: #00ffff;
+    -fx-effect: dropshadow(gaussian, #00ffff, 8, 0.4, 0, 0);
+}

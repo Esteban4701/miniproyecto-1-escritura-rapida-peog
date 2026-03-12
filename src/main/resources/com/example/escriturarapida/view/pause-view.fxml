@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="420.0" prefWidth="660.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.escriturarapida.controller.PauseController">
+   <Label fx:id="labWinOrLost" alignment="CENTER" ellipsisString="" layoutX="115.0" layoutY="14.0" prefHeight="138.0" prefWidth="430.0" styleClass="title" text="LOREM IPSUM">
+      <font>
+         <Font name="Arial Black" size="48.0" />
+      </font>
+   </Label>
+   <HBox layoutX="110.0" layoutY="169.0" prefHeight="120.0" prefWidth="440.0" style="-fx-background-color: rgba(10, 0, 25, 0.8);-fx-border-color: #00ffff; fx-border-width: 1;-fx-border-radius: 8;-fx-background-radius: 8;">
+      <VBox alignment="CENTER" prefWidth="220.0" style="-fx-border-color: transparent #00ffff transparent transparent; -fx-border-width: 1;">
+         <Label style="-fx-text-fill: #888888; -fx-font-size: 11px;" text="COMPLETED LEVELS" />
+         <Label fx:id="lblLevelsResult" style="-fx-text-fill: #00ffff; -fx-font-size: 36px;" text="12" />
+      </VBox>
+      <VBox alignment="CENTER" prefWidth="220.0">
+         <Label style="-fx-text-fill: #888888; -fx-font-size: 11px;" text="TIME LEFT" />
+         <Label fx:id="lblTimeResult" style="-fx-text-fill: #00ffff; -fx-font-size: 36px;" text="00:45" />
+      </VBox>
+   </HBox>
+   <HBox alignment="CENTER" layoutX="110.0" layoutY="324.0" prefHeight="45.0" prefWidth="440.0" spacing="20.0">
+
+      <Button fx:id="btnRestart" mnemonicParsing="false" onAction="#onRestart" style="-fx-background-color: transparent;-fx-text-fill: #00ff88;-fx-font-weight: bold;-fx-font-size: 14px;-fx-padding: 10 25 10 25;-fx-border-color: #00ff88;-fx-border-radius: 6;-fx-border-width: 1.5;fx-effect: dropshadow(gaussian, #00ff88, 8, 0.4, 0, 0);" text="↺  RESET">
+         <cursor>
+            <Cursor fx:constant="OPEN_HAND" />
+         </cursor></Button>
+
+      <Button mnemonicParsing="false" onAction="#onExit" style="-fx-background-color:transparent;-fx-text-fill: #ff00ff;-fx-font-weight: bold;-fx-font-size: 14px;-fx-padding: 10 25 10 25;-fx-border-color: #ff00ff;-fx-border-radius: 6;-fx-border-width: 1.5;fx-effect: dropshadow(gaussian, #ff00ff, 8, 0.4, 0, 0);" text="→  MENU">
+         <cursor>
+            <Cursor fx:constant="OPEN_HAND" />
+         </cursor></Button>
+   </HBox>
+</AnchorPane>
