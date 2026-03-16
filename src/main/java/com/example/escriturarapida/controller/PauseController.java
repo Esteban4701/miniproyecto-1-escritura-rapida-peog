@@ -1,19 +1,16 @@
 package com.example.escriturarapida.controller;
 
 import com.example.escriturarapida.model.GameModel;
+import com.example.escriturarapida.model.GameModelAdapter;
+import com.example.escriturarapida.model.IGameModel;
 import com.example.escriturarapida.utilities.GameData;
+import com.example.escriturarapida.view.GameView;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.stage.Stage;
 
-import java.io.IOException;
 import java.net.URL;
-import java.util.Objects;
 import java.util.ResourceBundle;
 
 /**
@@ -22,9 +19,9 @@ import java.util.ResourceBundle;
  * win or lose message, the level reached, and the remaining time.
  * Provides options to restart the game or return to the start screen.
  *
- * @author TuNombre
+ * @author Paulo Esteban Ordoñez Gutiérrez
  * @version 1.0
- * @since 2024
+ * @since 2026
  */
 public class PauseController implements Initializable {
 
@@ -40,81 +37,56 @@ public class PauseController implements Initializable {
     /** Button that restarts the game from the current saved level. */
     @FXML private Button btnRestart;
 
-    /** Instance of the game model used to reset game data on restart or exit. */
-    private final GameModel gameModel = new GameModel();
+    /**
+     * Game model accessed through the interface.
+     * Used only to reset game data on restart or exit.
+     */
+    private final IGameModel gameModel = new GameModelAdapter(new GameModel());
+
+    /** View handler responsible for scene transitions. */
+    private final GameView gameView = new GameView();
+
+
+    private static final String GAME_VIEW  = "/com/example/escriturarapida/view/game-view.fxml";
+    private static final String START_VIEW = "/com/example/escriturarapida/view/start-view.fxml";
 
     /**
-     * Initialization method called automatically by JavaFX after the FXML is loaded.
-     * Reads the game outcome from {@link GameData} and updates all result labels accordingly.
+     * Reads the game outcome from {@link GameData} and updates all result labels.
      * <ul>
      *   <li>{@code reasonWinOrLose == 1}: Player completed all levels.</li>
      *   <li>{@code reasonWinOrLose == 2}: Player completed the last level just as time ran out.</li>
      *   <li>{@code reasonWinOrLose == 3}: Player lost because time ran out.</li>
      * </ul>
-     *
-     * @param url            URL of the loaded FXML (not used).
-     * @param resourceBundle Internationalization resources (not used).
      */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         labWinOrLost.setStyle("-fx-text-fill: white");
-        if (GameData.reasonWinOrLose == 1) {
-            labWinOrLost.setText("        YOU WIN " +
-                    "\nGAME COMPLETE");
+
+        switch (GameData.reasonWinOrLose) {
+            case 1 -> labWinOrLost.setText("        YOU WIN\nGAME COMPLETE");
+            case 2 -> labWinOrLost.setText("  YOU WIN\nSO CLOSE!");
+            case 3 -> labWinOrLost.setText("YOU LOSE\nTIME'S UP");
         }
-        if (GameData.reasonWinOrLose == 2) {
-            labWinOrLost.setText("  YOU WIN " +
-                    "\nSO CLOSE!");
-        }
-        if (GameData.reasonWinOrLose == 3) {
-            labWinOrLost.setText("YOU LOSE \nTIME'S UP");
-        }
+
         lblLevelsResult.setText(String.valueOf(GameData.level));
         lblTimeResult.setText(String.format("%02d.%02d", GameData.seconds, GameData.milliseconds));
     }
 
     /**
-     * Handles the restart button action.
-     * Resets all game data and navigates to the game screen,
-     * continuing from the level saved in {@link GameData}.
+     * Resets all game data and navigates to the game screen.
      */
     @FXML
     private void onRestart() {
         gameModel.resetData();
-        changeScene("/com/example/escriturarapida/view/game-view.fxml");
+        gameView.changeScene(GAME_VIEW, btnRestart);
     }
 
     /**
-     * Handles the exit button action.
      * Resets all game data and navigates back to the start screen.
      */
     @FXML
     private void onExit() {
         gameModel.resetData();
-        changeScene("/com/example/escriturarapida/view/start-view.fxml");
-    }
-
-    /**
-     * Loads and displays a new scene from the given FXML path.
-     * Applies the global stylesheet to the new scene before displaying it.
-     *
-     * @param fxmlFile the full resource path to the FXML file to load,
-     *                 e.g. {@code "/com/example/escriturarapida/view/game-view.fxml"}.
-     */
-    private void changeScene(String fxmlFile) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
-            Parent root = loader.load();
-
-            Scene scene = new Scene(root);
-            scene.getStylesheets().add(
-                    Objects.requireNonNull(getClass().getResource("/com/example/escriturarapida/styles/styles.css")).toExternalForm()
-            );
-
-            Stage stage = (Stage) btnRestart.getScene().getWindow();
-            stage.setScene(scene);
-        } catch (IOException e) {
-            System.out.println("Load Scene Error: " + e.getMessage());
-        }
+        gameView.changeScene(START_VIEW, btnRestart);
     }
 }

@@ -1,32 +1,32 @@
 package com.example.escriturarapida.controller;
 
 import com.example.escriturarapida.model.GameModel;
+import com.example.escriturarapida.model.GameModelAdapter;
+import com.example.escriturarapida.model.IGameModel;
 import com.example.escriturarapida.utilities.GameData;
+import com.example.escriturarapida.view.GameView;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.paint.Color;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.*;
-import javafx.animation.Timeline;
-import javafx.animation.KeyFrame;
 import javafx.util.Duration;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
+
+import java.net.URL;
+import java.util.ResourceBundle;
 
 /**
  * Main controller for the game screen.
- * Handles UI logic, the countdown timer, and word validation.
- * Communicates with {@link GameModel} for business logic and
- * with {@link GameData} to share state between scenes.
+ * Coordinates UI events, the countdown timer, and word validation.
+ * Delegates business logic to {@link IGameModel} and scene transitions to {@link GameView}.
+ *
+ * @author Paulo Esteban Ordoñez Gutiérrez
+ * @version 1.0
+ * @since 2026
  */
 public class GameController implements Initializable {
 
@@ -54,8 +54,28 @@ public class GameController implements Initializable {
     /** Text field where the player types the word. */
     @FXML private TextField tfWriteField;
 
-    /** Instance of the game model containing all business logic. */
-    private final GameModel gameModel = new GameModel();
+    // -------------------------------------------------------------------------
+    // Dependencies
+    // -------------------------------------------------------------------------
+
+    /**
+     * Game model accessed through the interface.
+     * Decoupled from the concrete implementation via the Adapter pattern.
+     */
+    private final IGameModel gameModel = new GameModelAdapter(new GameModel());
+
+    /**
+     * View handler responsible for scene transitions.
+     */
+    private final GameView gameView = new GameView();
+
+    // -------------------------------------------------------------------------
+    // State
+    // -------------------------------------------------------------------------
+
+    /** Path to the results screen FXML. */
+    private static final String PAUSE_VIEW =
+            "/com/example/escriturarapida/view/pause-view.fxml";
 
     /**
      * Current player level.
@@ -81,6 +101,17 @@ public class GameController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        applyGlowEffect();
+        applyLabelStyles();
+        gameModel.loadWords();
+        screen();
+        startTimer();
+    }
+
+    /**
+     * Applies a purple glow effect to the word label.
+     */
+    private void applyGlowEffect() {
         DropShadow innerGlow = new DropShadow();
         innerGlow.setColor(Color.web("#B427CF"));
         innerGlow.setRadius(5);
@@ -96,14 +127,15 @@ public class GameController implements Initializable {
         lblWord.setClip(null);
         lblWord.setPickOnBounds(false);
         lblWord.setEffect(outerGlow);
+    }
 
+    /**
+     * Sets the initial orange color style on timer and level labels.
+     */
+    private void applyLabelStyles() {
         lblTimerText.setStyle("-fx-text-fill: #df5b00;");
         lblLevel.setStyle("-fx-text-fill: #df5b00;");
         lblLevelText.setStyle("-fx-text-fill: #df5b00;");
-
-        gameModel.loadWords();
-        screen();
-        startTimer();
     }
 
     /**
@@ -113,6 +145,7 @@ public class GameController implements Initializable {
         lblWord.setText(gameModel.randomSelect());
         lblLevel.setText(String.valueOf(level));
     }
+
 
     /**
      * Handles the validation button action from the FXML.
@@ -124,18 +157,19 @@ public class GameController implements Initializable {
     @FXML
     private void onValidation() {
         String word = lblWord.getText();
-        String written = tfWriteField.getText().toLowerCase().trim();
+        String written = tfWriteField.getText();
 
         if (gameModel.validateWord(written, word)) {
             level++;
             tfWriteField.clear();
             gameModel.removeWord(word);
+
             if (level == 45) {
                 GameData.reasonWinOrLose = 1; // Win: completed the game
                 lblLevel.setText(String.valueOf(level));
                 timer.stop();
                 gameModel.saveData(level, seconds, milliseconds);
-                changeScene();
+                gameView.changeScene(PAUSE_VIEW, lblWord);
             } else {
                 lblWord.setText(gameModel.randomSelect());
                 lblLevel.setText(String.valueOf(level));
@@ -169,17 +203,7 @@ public class GameController implements Initializable {
 
         timer = new Timeline(new KeyFrame(Duration.millis(10), e -> {
             milliseconds--;
-            if (seconds <= 5) {
-                String color = (milliseconds % 50 < 25) ? "#df5b00" : "#8b0000";
-                lblTimer.setStyle("-fx-text-fill: " + color + ";");
-                lblSecText.setStyle("-fx-text-fill:" + color + ";");
-            } else if (seconds <= 10) {
-                lblTimer.setStyle("-fx-text-fill: #ff0000;");
-                lblSecText.setStyle("-fx-text-fill: #ff0000;");
-            } else {
-                lblTimer.setStyle("-fx-text-fill: #df5b00;");
-                lblSecText.setStyle("-fx-text-fill: #df5b00;");
-            }
+            updateTimerColor();
 
             if (milliseconds < 0) {
                 milliseconds = 99;
@@ -187,33 +211,7 @@ public class GameController implements Initializable {
             }
 
             if (seconds < 0) {
-                seconds = 0;
-                milliseconds = 0;
-                timer.stop();
-
-                String written = tfWriteField.getText().toLowerCase().trim();
-                String word = lblWord.getText().toLowerCase();
-
-                if (gameModel.validateWord(written, word)) {
-                    level++;
-                    tfWriteField.clear();
-                    gameModel.removeWord(word);
-                    if (level == 45) {
-                        GameData.reasonWinOrLose = 2; // Win by the skin of one's teeth
-                        lblLevel.setText(String.valueOf(level));
-                        gameModel.saveData(level, seconds, milliseconds);
-                        changeScene();
-                    } else {
-                        lblWord.setText(gameModel.randomSelect());
-                        lblLevel.setText(String.valueOf(level));
-                        showMessage(true);
-                        startTimer();
-                    }
-                } else {
-                    GameData.reasonWinOrLose = 3; // Loss by timeout
-                    gameModel.saveData(level, seconds, milliseconds);
-                    changeScene();
-                }
+                handleTimeOut();
                 return;
             }
 
@@ -225,55 +223,75 @@ public class GameController implements Initializable {
     }
 
     /**
+     * Updates the timer label color based on remaining seconds.
+     */
+    private void updateTimerColor() {
+        String color;
+        if (seconds <= 5) {
+            color = (milliseconds % 50 < 25) ? "#df5b00" : "#8b0000";
+        } else if (seconds <= 10) {
+            color = "#ff0000";
+        } else {
+            color = "#df5b00";
+        }
+        lblTimer.setStyle("-fx-text-fill: " + color + ";");
+        lblSecText.setStyle("-fx-text-fill: " + color + ";");
+    }
+
+    /**
+     * Handles the case when the countdown reaches zero.
+     * Checks if the player typed the correct word just in time.
+     * Transitions to the results screen with the appropriate reason code.
+     */
+    private void handleTimeOut() {
+        seconds = 0;
+        milliseconds = 0;
+        timer.stop();
+
+        String written = tfWriteField.getText();
+        String word = lblWord.getText();
+
+        if (gameModel.validateWord(written, word)) {
+            level++;
+            tfWriteField.clear();
+            gameModel.removeWord(word);
+
+            if (level == 45) {
+                GameData.reasonWinOrLose = 2; // Win by the skin of one's teeth
+                lblLevel.setText(String.valueOf(level));
+                gameModel.saveData(level, seconds, milliseconds);
+                gameView.changeScene(PAUSE_VIEW, lblWord);
+            } else {
+                lblWord.setText(gameModel.randomSelect());
+                lblLevel.setText(String.valueOf(level));
+                showMessage(true);
+                startTimer();
+            }
+        } else {
+            GameData.reasonWinOrLose = 3; // Loss by timeout
+            gameModel.saveData(level, seconds, milliseconds);
+            gameView.changeScene(PAUSE_VIEW, lblWord);
+        }
+    }
+
+    /**
      * Displays a popup feedback message for 1 second.
      * The message and color differ based on whether the answer was correct or not.
      *
      * @param correct {@code true} if the word was correct, {@code false} if incorrect.
      */
     private void showMessage(boolean correct) {
-        String message;
         if (correct) {
-            message = gameModel.getRandomPositiveMessage();
+            lblPopUp.setText(gameModel.getRandomPositiveMessage());
             lblPopUp.setStyle("-fx-text-fill: #00ff88; -fx-font-size: 28px; -fx-font-weight: bold;");
         } else {
-            message = gameModel.getRandomNegativeMessage();
+            lblPopUp.setText(gameModel.getRandomNegativeMessage());
             lblPopUp.setStyle("-fx-text-fill: #ff0000; -fx-font-size: 28px; -fx-font-weight: bold;");
         }
 
-        lblPopUp.setText(message);
-
-        EventHandler<ActionEvent> handler = new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent e) {
-                lblPopUp.setText("");
-            }
-        };
-
-        KeyFrame keyFrame = new KeyFrame(Duration.seconds(1), handler);
-        Timeline messageTimer = new Timeline(keyFrame);
+        Timeline messageTimer = new Timeline(
+                new KeyFrame(Duration.seconds(1), (ActionEvent e) -> lblPopUp.setText(""))
+        );
         messageTimer.play();
     }
-
-    /**
-     * Loads and displays the results screen ({@code pause-view.fxml}).
-     * Applies the global stylesheet to the new scene.
-     */
-    private void changeScene() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/escriturarapida/view/pause-view.fxml"));
-            Parent root = loader.load();
-
-            Stage stage = (Stage) lblWord.getScene().getWindow();
-            Scene scene = new Scene(root);
-
-            scene.getStylesheets().add(
-                    Objects.requireNonNull(getClass().getResource("/com/example/escriturarapida/styles/styles.css")).toExternalForm()
-            );
-            stage.setScene(scene);
-        } catch (IOException e) {
-            System.out.println("Load Scene Error: " + e.getMessage());
-        }
-    }
 }
-
-
