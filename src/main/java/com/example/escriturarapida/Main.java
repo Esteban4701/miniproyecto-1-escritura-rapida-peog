@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
@@ -61,6 +62,7 @@ public class Main extends Application {
                 Objects.requireNonNull(getClass().getResource("/com/example/escriturarapida/styles/styles.css")).toExternalForm()
         );
         primaryStage.setScene(scene);
+        primaryStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/escriturarapida/images/F.png"))));
         primaryStage.setTitle("Escritura Rapida");
         primaryStage.show();
     }
