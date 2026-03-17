@@ -31,7 +31,7 @@
             <Cursor fx:constant="OPEN_HAND" />
          </cursor></Button>
 
-      <Button mnemonicParsing="false" onAction="#onExit" style="-fx-background-color:transparent;-fx-text-fill: #ff00ff;-fx-font-weight: bold;-fx-font-size: 14px;-fx-padding: 10 25 10 25;-fx-border-color: #ff00ff;-fx-border-radius: 6;-fx-border-width: 1.5;fx-effect: dropshadow(gaussian, #ff00ff, 8, 0.4, 0, 0);" text="→  MENU">
+      <Button mnemonicParsing="false" onAction="#onExit" style="-fx-background-color:transparent;-fx-text-fill: #ff00ff;-fx-font-weight: bold;-fx-font-size: 14px;-fx-padding: 10 25 10 25;-fx-border-color: #ff00ff;-fx-border-radius: 6;-fx-border-width: 1.5;fx-effect: dropshadow(gaussian, #ff00ff, 8, 0.4, 0, 0);" text="⌂  MENU">
          <cursor>
             <Cursor fx:constant="OPEN_HAND" />
          </cursor></Button>
