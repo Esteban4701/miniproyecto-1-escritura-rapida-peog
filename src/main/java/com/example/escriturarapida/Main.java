@@ -48,6 +48,7 @@ public class Main extends Application {
      * @param primaryStage the main window provided by the JavaFX runtime.
      * @throws IOException if the FXML file or stylesheet cannot be loaded.
      */
+
     @Override
     public void start(Stage primaryStage) throws IOException {
         Font.loadFont(getClass().getResourceAsStream("/com/example/escriturarapida/fonts/Rajdhani-Regular.ttf"), 14);
