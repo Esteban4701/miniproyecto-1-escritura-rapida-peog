@@ -260,7 +260,6 @@ public class GameController implements Initializable, AudioReceiver {
      * Music conditions are evaluated before the scene transition via {@link #musicConditions()}.
      */
     private void handleTimeOut() {
-        musicConditions();
         seconds = 0;
         milliseconds = 0;
         timer.stop();
@@ -283,6 +282,7 @@ public class GameController implements Initializable, AudioReceiver {
                 lblLevel.setText(String.valueOf(level));
                 showMessage(true);
                 startTimer();
+                musicConditions();
             }
         } else {
             GameData.reasonWinOrLose = 3;
@@ -324,7 +324,7 @@ public class GameController implements Initializable, AudioReceiver {
     public void setAudioManager(AudioManager audioManager) {
         this.audioManager = audioManager;
         AudioManager.currentStatus = AudioManager.GAME_START;
-        audioManager.update();
+        audioManager.audioUpdate();
     }
 
     /**
@@ -338,17 +338,17 @@ public class GameController implements Initializable, AudioReceiver {
      * </ul>
      */
     public void musicConditions() {
-        if (level == 14) {
+        if (level == 15) {
             AudioManager.currentStatus = AudioManager.GAME_START_2;
-            audioManager.update();
+            audioManager.audioUpdate();
         }
-        if (level == 18) {
+        if (level == 19) {
             AudioManager.currentStatus = AudioManager.GAME_MIDDLE;
-            audioManager.update();
+            audioManager.audioUpdate();
         }
         if (level == 33) {
             AudioManager.currentStatus = AudioManager.GAME_FINAL;
-            audioManager.update();
+            audioManager.audioUpdate();
         }
     }
 }

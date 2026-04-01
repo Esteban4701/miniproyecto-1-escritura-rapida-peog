@@ -89,7 +89,7 @@ public class StartController implements Initializable, AudioReceiver {
 
     /**
      * Injects the shared {@link AudioManager} instance into this controller
-     * and sets the audio state to {@link AudioManager#MENU}, triggering an update
+     * and sets the audio state to {@link AudioManager#MENU}, triggering an audioUpdate
      * so the correct background music plays while the start screen is active.
      *
      * <p>Must be called after the FXML is loaded and before the user interacts
@@ -101,6 +101,6 @@ public class StartController implements Initializable, AudioReceiver {
     public void setAudioManager(AudioManager audioManager) {
         this.audioManager = audioManager;
         AudioManager.currentStatus = AudioManager.MENU;
-        audioManager.update();
+        audioManager.audioUpdate();
     }
 }

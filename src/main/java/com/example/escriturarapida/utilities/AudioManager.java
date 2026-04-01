@@ -11,9 +11,9 @@ import javafx.util.Duration;
  * resource. Each game state maps to a specific time window {@code [start, end]}
  * within that file, which is looped indefinitely until the state changes.</p>
  *
- * <p>State transitions are driven externally: callers update the public static
- * field {@link #currentStatus} and then invoke {@link #update()} to apply the
- * change. {@code update()} is idempotent — if the state has not changed since
+ * <p>State transitions are driven externally: callers audioUpdate the public static
+ * field {@link #currentStatus} and then invoke {@link #audioUpdate()} to apply the
+ * change. {@code audioUpdate()} is idempotent — if the state has not changed since
  * the last call, playback is left untouched.</p>
  *
  * <p>Typical usage:</p>
@@ -23,7 +23,7 @@ import javafx.util.Duration;
  *
  * // Later, when entering the game:
  * AudioManager.currentStatus = AudioManager.GAME_START;
- * audio.update();
+ * audio.audioUpdate();
  * }</pre>
  *
  * @author Paulo Esteban Ordoñez Gutiérrez
@@ -65,7 +65,7 @@ public class AudioManager {
     /**
      * The currently desired audio state. Must be set to one of the state
      * constants ({@link #MENU}, {@link #GAME_START}, etc.) before calling
-     * {@link #update()}.
+     * {@link #audioUpdate()}.
      *
      * <p><b>Note:</b> this field is {@code static} and therefore shared across
      * all instances. Applications should maintain only one {@code AudioManager}
@@ -74,9 +74,9 @@ public class AudioManager {
     public static int currentStatus = MENU;
 
     /**
-     * Tracks the state that was active during the last {@link #update()} call.
+     * Tracks the state that was active during the last {@link #audioUpdate()} call.
      * Used to detect changes and avoid redundant seeks or restarts.
-     * Initialized to {@code -1} so the first {@code update()} always plays.
+     * Initialized to {@code -1} so the first {@code audioUpdate()} always plays.
      */
     private int previousState = -1;
 
@@ -88,7 +88,7 @@ public class AudioManager {
     private static final double[] musicMenu       = {   3.0,  20.9 };
 
     /** Time window for the game-start music section, in seconds. */
-    private static final double[] musicGameStart  = {  22.0,  45.9 };
+    private static final double[] musicGameStart  = {  22.0,  46.0 };
 
     /** Time window for the second game-start music section, in seconds. */
     private static final double[] musicGameStart2 = {  46.0,  54.3 };
@@ -156,7 +156,7 @@ public class AudioManager {
      *   <li>{@link #GAME_FINAL} → plays the final-game section</li>
      * </ul>
      */
-    public void update() {
+    public void audioUpdate() {
         if (currentStatus == previousState) return;
         previousState = currentStatus;
 

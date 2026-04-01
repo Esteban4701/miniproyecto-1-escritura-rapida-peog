@@ -30,8 +30,8 @@ public interface AudioReceiver {
     /**
      * Injects the shared {@link AudioManager} into this component.
      *
-     * <p>Implementations should store the reference and use it to update
-     * {@link AudioManager#currentStatus} and call {@link AudioManager#update()}
+     * <p>Implementations should store the reference and use it to audioUpdate
+     * {@link AudioManager#currentStatus} and call {@link AudioManager#audioUpdate()}
      * whenever the audio state needs to change for the current screen.</p>
      *
      * @param audioManager the application-wide audio manager; must not be {@code null}

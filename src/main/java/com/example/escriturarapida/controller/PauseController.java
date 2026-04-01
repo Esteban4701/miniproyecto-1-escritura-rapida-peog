@@ -130,6 +130,6 @@ public class PauseController implements Initializable, AudioReceiver {
         this.audioManager = audioManager;
         audioManager.setVolume(0.25);
         AudioManager.currentStatus = AudioManager.GAME_START;
-        audioManager.update();
+        audioManager.audioUpdate();
     }
 }
