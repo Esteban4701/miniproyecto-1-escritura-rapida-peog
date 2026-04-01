@@ -1,5 +1,7 @@
 package com.example.escriturarapida;
 
+import com.example.escriturarapida.controller.StartController;
+import com.example.escriturarapida.utilities.AudioManager;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -36,7 +38,8 @@ public class Main extends Application {
     /**
      * JavaFX entry point called after the runtime is initialized.
      * Loads custom fonts into the JavaFX font registry, loads the start screen FXML,
-     * applies the global stylesheet, and displays the primary stage.
+     * applies the global stylesheet, sets the application icon, and displays
+     * the primary stage.
      * <p>
      * Fonts loaded:
      * <ul>
@@ -44,11 +47,16 @@ public class Main extends Application {
      *   <li>Orbitron Bold — used for titles and headings.</li>
      *   <li>Share Tech Mono — used for the countdown timer.</li>
      * </ul>
+     * <p>
+     * Audio setup:
+     * The {@link AudioManager} is instantiated here with the background music track
+     * and injected into the {@link StartController} via
+     * {@link StartController#setAudioManager(AudioManager)}, ensuring a single
+     * {@code MediaPlayer} instance persists across all scene transitions.
      *
      * @param primaryStage the main window provided by the JavaFX runtime.
      * @throws IOException if the FXML file or stylesheet cannot be loaded.
      */
-
     @Override
     public void start(Stage primaryStage) throws IOException {
         Font.loadFont(getClass().getResourceAsStream("/com/example/escriturarapida/fonts/Rajdhani-Regular.ttf"), 14);
@@ -57,6 +65,11 @@ public class Main extends Application {
 
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("view/start-view.fxml"));
         Parent root = fxmlLoader.load();
+
+        String ruta = Objects.requireNonNull(getClass().getResource("/com/example/escriturarapida/audio/The-Synth-Wars-Jack-O'Reilly.mp3")).toExternalForm();
+        AudioManager audioManager = new AudioManager(ruta);
+        StartController startController = fxmlLoader.getController();
+        startController.setAudioManager(audioManager);
 
         Scene scene = new Scene(root);
         scene.getStylesheets().add(

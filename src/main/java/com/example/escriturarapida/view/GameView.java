@@ -1,5 +1,7 @@
 package com.example.escriturarapida.view;
 
+import com.example.escriturarapida.utilities.AudioManager;
+import com.example.escriturarapida.utilities.AudioReceiver;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -31,10 +33,15 @@ public class GameView {
      * @param fxmlPath the classpath-relative path to the FXML file.
      * @param node     any node belonging to the current scene, used to retrieve the {@link Stage}.
      */
-    public void changeScene(String fxmlPath, Node node) {
+    public void changeScene(String fxmlPath, Node node, AudioManager audioManager) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent root = loader.load();
+
+            Object controller = loader.getController();
+            if (controller instanceof AudioReceiver) {
+                ((AudioReceiver) controller).setAudioManager(audioManager);
+            }
 
             Stage stage = (Stage) node.getScene().getWindow();
             Scene scene = new Scene(root);

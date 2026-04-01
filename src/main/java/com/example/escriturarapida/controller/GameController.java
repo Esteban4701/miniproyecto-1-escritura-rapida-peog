@@ -3,6 +3,8 @@ package com.example.escriturarapida.controller;
 import com.example.escriturarapida.model.GameModel;
 import com.example.escriturarapida.model.GameModelAdapter;
 import com.example.escriturarapida.model.IGameModel;
+import com.example.escriturarapida.utilities.AudioManager;
+import com.example.escriturarapida.utilities.AudioReceiver;
 import com.example.escriturarapida.utilities.GameData;
 import com.example.escriturarapida.view.GameView;
 import javafx.animation.KeyFrame;
@@ -21,14 +23,16 @@ import java.util.ResourceBundle;
 
 /**
  * Main controller for the game screen.
- * Coordinates UI events, the countdown timer, and word validation.
+ * Coordinates UI events, the countdown timer, word validation, and background music.
  * Delegates business logic to {@link IGameModel} and scene transitions to {@link GameView}.
+ * Implements {@link AudioReceiver} to receive the shared {@link AudioManager} instance
+ * from the previous scene without recreating the underlying {@code MediaPlayer}.
  *
  * @author Paulo Esteban Ordoñez Gutiérrez
  * @version 1.0
  * @since 2026
  */
-public class GameController implements Initializable {
+public class GameController implements Initializable, AudioReceiver {
 
     /** Label used to display popup feedback messages on correct or incorrect answers. */
     @FXML private Label lblPopUp;
@@ -73,7 +77,7 @@ public class GameController implements Initializable {
     // State
     // -------------------------------------------------------------------------
 
-    /** Path to the results screen FXML. */
+    /** Path to the pause/results screen FXML. */
     private static final String PAUSE_VIEW =
             "/com/example/escriturarapida/view/pause-view.fxml";
 
@@ -91,6 +95,12 @@ public class GameController implements Initializable {
 
     /** Remaining milliseconds on the current timer. */
     private int milliseconds = 0;
+
+    /**
+     * Shared audio manager instance injected via {@link #setAudioManager(AudioManager)}.
+     * Controls background music state transitions throughout the game.
+     */
+    private AudioManager audioManager;
 
     /**
      * Initialization method called automatically by JavaFX after the FXML is loaded.
@@ -146,16 +156,18 @@ public class GameController implements Initializable {
         lblLevel.setText(String.valueOf(level));
     }
 
-
     /**
      * Handles the validation button action from the FXML.
      * Compares the typed word against the displayed word.
      * On a correct answer, advances to the next level and restarts the timer.
      * On an incorrect answer, displays a negative feedback message.
      * When level 45 is reached, saves game data and transitions to the results screen.
+     * <p>
+     * Music conditions are evaluated on every validation attempt via {@link #musicConditions()}.
      */
     @FXML
     private void onValidation() {
+        musicConditions();
         String word = lblWord.getText();
         String written = tfWriteField.getText();
 
@@ -165,11 +177,11 @@ public class GameController implements Initializable {
             gameModel.removeWord(word);
 
             if (level == 45) {
-                GameData.reasonWinOrLose = 1; // Win: completed the game
+                GameData.reasonWinOrLose = 1;
                 lblLevel.setText(String.valueOf(level));
                 timer.stop();
                 gameModel.saveData(level, seconds, milliseconds);
-                gameView.changeScene(PAUSE_VIEW, lblWord);
+                gameView.changeScene(PAUSE_VIEW, lblWord, audioManager);
             } else {
                 lblWord.setText(gameModel.randomSelect());
                 lblLevel.setText(String.valueOf(level));
@@ -186,12 +198,11 @@ public class GameController implements Initializable {
      * Available time decreases by 2 seconds every 5 levels.
      * Timer color changes based on remaining time:
      * <ul>
-     *   <li>Orange by default</li>
-     *   <li>Red when 10 or fewer seconds remain</li>
-     *   <li>Alternating dark orange and dark red when 5 or fewer seconds remain</li>
+     *   <li>Orange by default.</li>
+     *   <li>Red when 10 or fewer seconds remain.</li>
+     *   <li>Alternating dark orange and dark red when 5 or fewer seconds remain.</li>
      * </ul>
-     * If time runs out, validates whether the player typed the correct word
-     * just in time before transitioning to the results screen.
+     * If time runs out, delegates to {@link #handleTimeOut()}.
      */
     private void startTimer() {
         if (timer != null) {
@@ -241,9 +252,15 @@ public class GameController implements Initializable {
     /**
      * Handles the case when the countdown reaches zero.
      * Checks if the player typed the correct word just in time.
-     * Transitions to the results screen with the appropriate reason code.
+     * Transitions to the results screen with the appropriate reason code:
+     * <ul>
+     *   <li>{@code 2} — Win by the skin of one's teeth (correct word entered at timeout).</li>
+     *   <li>{@code 3} — Loss by timeout (incorrect or empty input).</li>
+     * </ul>
+     * Music conditions are evaluated before the scene transition via {@link #musicConditions()}.
      */
     private void handleTimeOut() {
+        musicConditions();
         seconds = 0;
         milliseconds = 0;
         timer.stop();
@@ -257,10 +274,10 @@ public class GameController implements Initializable {
             gameModel.removeWord(word);
 
             if (level == 45) {
-                GameData.reasonWinOrLose = 2; // Win by the skin of one's teeth
+                GameData.reasonWinOrLose = 2;
                 lblLevel.setText(String.valueOf(level));
                 gameModel.saveData(level, seconds, milliseconds);
-                gameView.changeScene(PAUSE_VIEW, lblWord);
+                gameView.changeScene(PAUSE_VIEW, lblWord, audioManager);
             } else {
                 lblWord.setText(gameModel.randomSelect());
                 lblLevel.setText(String.valueOf(level));
@@ -268,9 +285,9 @@ public class GameController implements Initializable {
                 startTimer();
             }
         } else {
-            GameData.reasonWinOrLose = 3; // Loss by timeout
+            GameData.reasonWinOrLose = 3;
             gameModel.saveData(level, seconds, milliseconds);
-            gameView.changeScene(PAUSE_VIEW, lblWord);
+            gameView.changeScene(PAUSE_VIEW, lblWord, audioManager);
         }
     }
 
@@ -278,7 +295,7 @@ public class GameController implements Initializable {
      * Displays a popup feedback message for 1 second.
      * The message and color differ based on whether the answer was correct or not.
      *
-     * @param correct {@code true} if the word was correct, {@code false} if incorrect.
+     * @param correct {@code true} if the word was correct, {@code false} otherwise.
      */
     private void showMessage(boolean correct) {
         if (correct) {
@@ -293,5 +310,45 @@ public class GameController implements Initializable {
                 new KeyFrame(Duration.seconds(1), (ActionEvent e) -> lblPopUp.setText(""))
         );
         messageTimer.play();
+    }
+
+    /**
+     * Receives the shared {@link AudioManager} instance from the previous scene.
+     * Sets the music state to {@link AudioManager#GAME_START} and triggers playback.
+     * Called automatically by {@link com.example.escriturarapida.view.GameView}
+     * after the FXML is loaded, via the {@link AudioReceiver} interface.
+     *
+     * @param audioManager the shared audio manager carrying the active {@code MediaPlayer}.
+     */
+    @Override
+    public void setAudioManager(AudioManager audioManager) {
+        this.audioManager = audioManager;
+        AudioManager.currentStatus = AudioManager.GAME_START;
+        audioManager.update();
+    }
+
+    /**
+     * Evaluates level-based conditions and updates the music state accordingly.
+     * Called on every word validation and on timeout to ensure music transitions
+     * are synchronized with game progression:
+     * <ul>
+     *   <li>Level 14 — transitions to {@link AudioManager#GAME_START_2}.</li>
+     *   <li>Level 18 — transitions to {@link AudioManager#GAME_MIDDLE}.</li>
+     *   <li>Level 33 — transitions to {@link AudioManager#GAME_FINAL}.</li>
+     * </ul>
+     */
+    public void musicConditions() {
+        if (level == 14) {
+            AudioManager.currentStatus = AudioManager.GAME_START_2;
+            audioManager.update();
+        }
+        if (level == 18) {
+            AudioManager.currentStatus = AudioManager.GAME_MIDDLE;
+            audioManager.update();
+        }
+        if (level == 33) {
+            AudioManager.currentStatus = AudioManager.GAME_FINAL;
+            audioManager.update();
+        }
     }
 }
